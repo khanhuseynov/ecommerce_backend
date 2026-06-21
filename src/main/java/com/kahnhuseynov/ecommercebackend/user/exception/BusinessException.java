@@ -1,4 +1,7 @@
 package com.kahnhuseynov.ecommercebackend.user.exception;
+public class BusinessException extends RuntimeException {
 
-public class BusinessException {
+    public BusinessException(String message) {
+        super(message);
+    }
 }
