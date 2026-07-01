@@ -1,5 +1,7 @@
 package com.kahnhuseynov.ecommercebackend.user.controller
 
+import com.kahnhuseynov.ecommercebackend.core.security.CustomUserDetailsService
+import com.kahnhuseynov.ecommercebackend.core.security.jwt.JwtTokenProvider
 import com.kahnhuseynov.ecommercebackend.user.dto.UserResponse
 import com.kahnhuseynov.ecommercebackend.user.service.UserService
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,6 +25,12 @@ class UserControllerSpec extends Specification {
 
     @SpringBean
     UserService userService = Mock()
+
+    @SpringBean
+    JwtTokenProvider jwtTokenProvider = Mock()
+
+    @SpringBean
+    CustomUserDetailsService userDetailsService = Mock()
 
     def "POST /api/v1/users/register with valid request returns 201 Created"() {
         given:
