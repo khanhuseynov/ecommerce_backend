@@ -1,7 +1,7 @@
 package com.kahnhuseynov.ecommercebackend.user.service;
 
-import com.kahnhuseynov.ecommercebackend.user.exception.BusinessException;
-import com.kahnhuseynov.ecommercebackend.user.exception.ResourceNotFoundException;
+import com.kahnhuseynov.ecommercebackend.core.exception.BusinessException;
+import com.kahnhuseynov.ecommercebackend.core.exception.ResourceNotFoundException;
 import com.kahnhuseynov.ecommercebackend.user.dto.UserRegisterRequest;
 import com.kahnhuseynov.ecommercebackend.user.dto.UserResponse;
 import com.kahnhuseynov.ecommercebackend.user.entity.Role;
@@ -10,6 +10,7 @@ import com.kahnhuseynov.ecommercebackend.user.mapper.UserMapper;
 import com.kahnhuseynov.ecommercebackend.user.repository.RoleRepository;
 import com.kahnhuseynov.ecommercebackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -39,6 +41,7 @@ public class UserServiceImpl implements UserService {
                         new ResourceNotFoundException("Role 'ROLE_USER' not found.")
                 );
 
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEnabled(true);
         user.setRoles(Set.of(role));
 
