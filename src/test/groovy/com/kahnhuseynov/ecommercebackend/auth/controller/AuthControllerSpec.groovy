@@ -9,9 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.MediaType
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.test.web.servlet.MockMvc
 import spock.lang.Specification
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -65,6 +68,21 @@ class AuthControllerSpec extends Specification {
         then:
         result.andExpect(status().isBadRequest())
         0 * authService._
+    }
+
+    def "GET /api/v1/auth/me returns current authenticated user"() {
+        given:
+        def authentication = new UsernamePasswordAuthenticationToken(
+                "khan@example.com",
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        )
+
+        expect:
+        mockMvc.perform(get("/api/v1/auth/me").principal(authentication))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath('$.email').value("khan@example.com"))
+                .andExpect(jsonPath('$.authorities[0]').value("ROLE_USER"))
     }
 
     private static String validLoginJson(
