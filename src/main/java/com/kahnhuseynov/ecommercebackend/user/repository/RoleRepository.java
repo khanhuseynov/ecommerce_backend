@@ -9,6 +9,7 @@ import java.util.Optional;
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
     // Used to find role by its name during user registration
-    @EntityGraph(attributePaths = "roles")
+
     Optional<Role> findByName(String name);
+
 }
