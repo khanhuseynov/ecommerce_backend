@@ -1,5 +1,7 @@
 package com.kahnhuseynov.ecommercebackend.product.service;
 
+import com.kahnhuseynov.ecommercebackend.category.entity.Category;
+import com.kahnhuseynov.ecommercebackend.category.repository.CategoryRepository;
 import com.kahnhuseynov.ecommercebackend.core.exception.ResourceNotFoundException;
 import com.kahnhuseynov.ecommercebackend.product.dto.ProductRequest;
 import com.kahnhuseynov.ecommercebackend.product.dto.ProductResponse;
@@ -18,6 +20,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final CategoryRepository categoryRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -40,6 +43,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
         Product product = productMapper.toEntity(request);
+        product.setCategory(findCategoryById(request.categoryId()));
         product.setActive(request.active() == null || request.active());
 
         Product savedProduct = productRepository.save(product);
@@ -53,6 +57,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = findProductById(id);
 
         productMapper.updateEntity(request, product);
+        product.setCategory(findCategoryById(request.categoryId()));
         product.setActive(request.active() == null || request.active());
 
         Product savedProduct = productRepository.save(product);
@@ -72,6 +77,13 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Product with id '%s' not found.".formatted(id))
+                );
+    }
+
+    private Category findCategoryById(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Category with id '%s' not found.".formatted(id))
                 );
     }
 }

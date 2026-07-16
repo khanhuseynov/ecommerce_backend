@@ -28,6 +28,9 @@ public record ProductRequest(
     @PositiveOrZero(message = "Stock quantity cannot be negative")
     Integer stockQuantity,
 
+    @NotNull(message = "Product category cannot be empty")
+    Long categoryId,
+
     Boolean active
 ) {
 }

@@ -1,5 +1,6 @@
 package com.kahnhuseynov.ecommercebackend.product.dto;
 
+import com.kahnhuseynov.ecommercebackend.category.dto.CategoryResponse;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
@@ -18,6 +19,8 @@ public record ProductResponse(
     BigDecimal price,
 
     Integer stockQuantity,
+
+    CategoryResponse category,
 
     Boolean active,
 

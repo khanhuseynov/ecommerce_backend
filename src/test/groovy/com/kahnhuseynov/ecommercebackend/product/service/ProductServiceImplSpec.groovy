@@ -1,5 +1,7 @@
 package com.kahnhuseynov.ecommercebackend.product.service
 
+import com.kahnhuseynov.ecommercebackend.category.entity.Category
+import com.kahnhuseynov.ecommercebackend.category.repository.CategoryRepository
 import com.kahnhuseynov.ecommercebackend.core.exception.ResourceNotFoundException
 import com.kahnhuseynov.ecommercebackend.product.dto.ProductRequest
 import com.kahnhuseynov.ecommercebackend.product.dto.ProductResponse
@@ -12,10 +14,12 @@ class ProductServiceImplSpec extends Specification {
 
     ProductRepository productRepository = Mock()
     ProductMapper productMapper = Mock()
+    CategoryRepository categoryRepository = Mock()
 
     ProductServiceImpl productService = new ProductServiceImpl(
             productRepository,
-            productMapper
+            productMapper,
+            categoryRepository
     )
 
     def "getAllProducts should return mapped products"() {
@@ -75,6 +79,7 @@ class ProductServiceImplSpec extends Specification {
 
         then:
         1 * productMapper.toEntity(request) >> product
+        1 * categoryRepository.findById(1L) >> Optional.of(category())
         1 * productRepository.save({
             it.name == "Laptop" &&
                     it.price == new BigDecimal("1200.00") &&
@@ -85,6 +90,24 @@ class ProductServiceImplSpec extends Specification {
         0 * _
 
         result == response
+    }
+
+    def "createProduct should fail when category does not exist"() {
+        given:
+        def request = validRequest()
+        def product = mappedProduct()
+
+        when:
+        productService.createProduct(request)
+
+        then:
+        1 * productMapper.toEntity(request) >> product
+        1 * categoryRepository.findById(1L) >> Optional.empty()
+
+        def exception = thrown(ResourceNotFoundException)
+        exception.message == "Category with id '1' not found."
+
+        0 * _
     }
 
     def "updateProduct should update existing product"() {
@@ -99,6 +122,7 @@ class ProductServiceImplSpec extends Specification {
         then:
         1 * productRepository.findById(1L) >> Optional.of(product)
         1 * productMapper.updateEntity(request, product)
+        1 * categoryRepository.findById(1L) >> Optional.of(category())
         1 * productRepository.save(product) >> product
         1 * productMapper.toResponse(product) >> response
         0 * _
@@ -118,6 +142,25 @@ class ProductServiceImplSpec extends Specification {
 
         def exception = thrown(ResourceNotFoundException)
         exception.message == "Product with id '99' not found."
+
+        0 * _
+    }
+
+    def "updateProduct should fail when category does not exist"() {
+        given:
+        def request = validRequest()
+        def product = savedProduct()
+
+        when:
+        productService.updateProduct(1L, request)
+
+        then:
+        1 * productRepository.findById(1L) >> Optional.of(product)
+        1 * productMapper.updateEntity(request, product)
+        1 * categoryRepository.findById(1L) >> Optional.empty()
+
+        def exception = thrown(ResourceNotFoundException)
+        exception.message == "Category with id '1' not found."
 
         0 * _
     }
@@ -149,7 +192,7 @@ class ProductServiceImplSpec extends Specification {
     }
 
     private static ProductRequest validRequest() {
-        new ProductRequest("Laptop", "Development laptop", new BigDecimal("1200.00"), 10, true)
+        new ProductRequest("Laptop", "Development laptop", new BigDecimal("1200.00"), 10, 1L, true)
     }
 
     private static Product mappedProduct() {
@@ -168,6 +211,14 @@ class ProductServiceImplSpec extends Specification {
         product
     }
 
+    private static Category category() {
+        def category = new Category()
+        category.setId(1L)
+        category.setName("Electronics")
+        category.setActive(true)
+        category
+    }
+
     private static ProductResponse successResponse() {
         new ProductResponse(
                 1L,
@@ -175,6 +226,7 @@ class ProductServiceImplSpec extends Specification {
                 "Development laptop",
                 new BigDecimal("1200.00"),
                 10,
+                null,
                 true,
                 null,
                 null

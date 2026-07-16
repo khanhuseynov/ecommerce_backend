@@ -127,6 +127,7 @@ class ProductControllerSpec extends Specification {
           "description": "Development laptop",
           "price": 1200.00,
           "stock_quantity": 10,
+          "category_id": 1,
           "active": true
         }
         """
@@ -139,6 +140,7 @@ class ProductControllerSpec extends Specification {
                 "Development laptop",
                 new BigDecimal("1200.00"),
                 10,
+                null,
                 true,
                 LocalDateTime.parse("2026-07-15T10:00:00"),
                 LocalDateTime.parse("2026-07-15T10:00:00")
