@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 7-create-carts-table
+      author: kahn_huseynov
+      changes:
+        - createTable:
+            tableName: carts
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: bigint, constraints: { nullable: false, unique: true } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addForeignKeyConstraint:
+            baseTableName: carts
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_carts_user
+            onDelete: CASCADE
+  - changeSet:
+      id: 8-create-cart-items-table
+      author: kahn_huseynov
+      changes:
+        - createTable:
+            tableName: cart_items
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: cart_id, type: bigint, constraints: { nullable: false } }
+              - column: { name: product_id, type: bigint, constraints: { nullable: false } }
+              - column: { name: quantity, type: int, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: cart_items
+            columnNames: cart_id, product_id
+            constraintName: uk_cart_items_cart_product
+        - addForeignKeyConstraint:
+            baseTableName: cart_items
+            baseColumnNames: cart_id
+            referencedTableName: carts
+            referencedColumnNames: id
+            constraintName: fk_cart_items_cart
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: cart_items
+            baseColumnNames: product_id
+            referencedTableName: products
+            referencedColumnNames: id
+            constraintName: fk_cart_items_product
+            onDelete: RESTRICT
+        - createIndex:
+            tableName: cart_items
+            indexName: idx_cart_items_product_id
+            columns:
+              - column: { name: product_id }
