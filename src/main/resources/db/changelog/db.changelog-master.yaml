@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/v3-category.yaml
   - include:
       file: db/changelog/v4-cart.yaml
+  - include:
+      file: db/changelog/v5-order.yaml
