@@ -9,7 +9,7 @@ import spock.lang.Specification
 
 class JwtTokenProviderSpec extends Specification {
 
-    private static final String SECRET = "EaH2ro8ToZ5oeqZKBEzj8+kar0DfwlNymc2wYxWHy2U="
+    private static final String SECRET = "dGVzdC1qd3Qtc2VjcmV0LW11c3QtYmUtMzItYnl0ZXMtbG9uZw=="
 
     def "generateToken should create valid token with email subject"() {
         given:

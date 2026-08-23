@@ -2,12 +2,12 @@ package com.kahnhuseynov.ecommercebackend.category.service;
 
 import com.kahnhuseynov.ecommercebackend.category.dto.CategoryRequest;
 import com.kahnhuseynov.ecommercebackend.category.dto.CategoryResponse;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface CategoryService {
 
-    List<CategoryResponse> getAllCategories();
+    Page<CategoryResponse> getAllCategories(Pageable pageable);
 
     CategoryResponse getCategoryById(Long id);
 

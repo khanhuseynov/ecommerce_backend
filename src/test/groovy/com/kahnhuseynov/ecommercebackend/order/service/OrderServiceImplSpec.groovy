@@ -13,6 +13,8 @@ import com.kahnhuseynov.ecommercebackend.product.entity.Product
 import com.kahnhuseynov.ecommercebackend.product.repository.ProductRepository
 import com.kahnhuseynov.ecommercebackend.user.entity.User
 import spock.lang.Specification
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 
 class OrderServiceImplSpec extends Specification {
     OrderRepository orderRepository = Mock()
@@ -91,6 +93,27 @@ class OrderServiceImplSpec extends Specification {
         then:
         def exception = thrown(ResourceNotFoundException)
         exception.message == "Order with id '99' not found."
+    }
+
+    def "getOrders returns a paginated response scoped to current user"() {
+        given:
+        def pageable = PageRequest.of(0, 20)
+        def order = new Order(
+                id: 10L,
+                user: new User(id: 1L),
+                status: OrderStatus.PLACED,
+                shippingAddress: "Baku",
+                totalPrice: new BigDecimal("25.50"),
+                items: []
+        )
+        orderRepository.findAllByUserId(1L, pageable) >> new PageImpl<>([order], pageable, 1)
+
+        when:
+        def result = service.getOrders(1L, pageable)
+
+        then:
+        result.content*.id() == [10L]
+        result.totalElements == 1
     }
 
     private static Product product(Long id, String name, String price, int stock, boolean active) {

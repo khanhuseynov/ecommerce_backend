@@ -2,12 +2,13 @@ package com.kahnhuseynov.ecommercebackend.product.service;
 
 import com.kahnhuseynov.ecommercebackend.product.dto.ProductRequest;
 import com.kahnhuseynov.ecommercebackend.product.dto.ProductResponse;
-
-import java.util.List;
+import com.kahnhuseynov.ecommercebackend.product.dto.ProductSearchCriteria;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface ProductService {
 
-    List<ProductResponse> getAllProducts();
+    Page<ProductResponse> searchProducts(ProductSearchCriteria criteria, Pageable pageable);
 
     ProductResponse getProductById(Long id);
 

@@ -2,13 +2,13 @@ package com.kahnhuseynov.ecommercebackend.order.service;
 
 import com.kahnhuseynov.ecommercebackend.order.dto.CheckoutRequest;
 import com.kahnhuseynov.ecommercebackend.order.dto.OrderResponse;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface OrderService {
     OrderResponse checkout(Long userId, CheckoutRequest request);
 
-    List<OrderResponse> getOrders(Long userId);
+    Page<OrderResponse> getOrders(Long userId, Pageable pageable);
 
     OrderResponse getOrder(Long userId, Long orderId);
 }

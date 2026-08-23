@@ -9,6 +9,8 @@ import com.kahnhuseynov.ecommercebackend.core.exception.BusinessException
 import com.kahnhuseynov.ecommercebackend.core.exception.ResourceNotFoundException
 import com.kahnhuseynov.ecommercebackend.product.repository.ProductRepository
 import spock.lang.Specification
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 
 class CategoryServiceImplSpec extends Specification {
 
@@ -27,14 +29,17 @@ class CategoryServiceImplSpec extends Specification {
         def category = savedCategory()
         def response = successResponse()
 
+        def pageable = PageRequest.of(0, 20)
+
         when:
-        def result = categoryService.getAllCategories()
+        def result = categoryService.getAllCategories(pageable)
 
         then:
-        1 * categoryRepository.findAll() >> List.of(category)
+        1 * categoryRepository.findAll(pageable) >> new PageImpl<>(List.of(category), pageable, 1)
         1 * categoryMapper.toResponse(category) >> response
         0 * _
-        result == List.of(response)
+        result.content == List.of(response)
+        result.totalElements == 1
     }
 
     def "getCategoryById should return mapped category"() {

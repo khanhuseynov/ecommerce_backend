@@ -3,20 +3,40 @@ package com.kahnhuseynov.ecommercebackend.product.service;
 import com.kahnhuseynov.ecommercebackend.category.entity.Category;
 import com.kahnhuseynov.ecommercebackend.category.repository.CategoryRepository;
 import com.kahnhuseynov.ecommercebackend.core.exception.ResourceNotFoundException;
+import com.kahnhuseynov.ecommercebackend.core.exception.InvalidRequestException;
+import com.kahnhuseynov.ecommercebackend.core.pagination.PaginationValidator;
 import com.kahnhuseynov.ecommercebackend.product.dto.ProductRequest;
 import com.kahnhuseynov.ecommercebackend.product.dto.ProductResponse;
+import com.kahnhuseynov.ecommercebackend.product.dto.ProductSearchCriteria;
 import com.kahnhuseynov.ecommercebackend.product.entity.Product;
 import com.kahnhuseynov.ecommercebackend.product.mapper.ProductMapper;
 import com.kahnhuseynov.ecommercebackend.product.repository.ProductRepository;
+import com.kahnhuseynov.ecommercebackend.product.repository.ProductSpecifications;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
+
+    private static final Map<String, String> ALLOWED_SORT_FIELDS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("name", "name"),
+            Map.entry("price", "price"),
+            Map.entry("stock_quantity", "stockQuantity"),
+            Map.entry("stockQuantity", "stockQuantity"),
+            Map.entry("active", "active"),
+            Map.entry("created_at", "createdAt"),
+            Map.entry("createdAt", "createdAt"),
+            Map.entry("updated_at", "updatedAt"),
+            Map.entry("updatedAt", "updatedAt")
+    );
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
@@ -24,11 +44,19 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductResponse> getAllProducts() {
-        return productRepository.findAll()
-                .stream()
-                .map(productMapper::toResponse)
-                .toList();
+    public Page<ProductResponse> searchProducts(ProductSearchCriteria criteria, Pageable pageable) {
+        validatePriceRange(criteria);
+        Pageable normalizedPageable = PaginationValidator.normalizeSort(pageable, ALLOWED_SORT_FIELDS);
+        return productRepository.findAll(ProductSpecifications.withCriteria(criteria), normalizedPageable)
+                .map(productMapper::toResponse);
+    }
+
+    private void validatePriceRange(ProductSearchCriteria criteria) {
+        if (criteria.minPrice() != null && criteria.maxPrice() != null
+                && criteria.minPrice().compareTo(criteria.maxPrice()) > 0) {
+            throw new InvalidRequestException("Minimum price cannot be greater than maximum price.");
+        }
+
     }
 
     @Override

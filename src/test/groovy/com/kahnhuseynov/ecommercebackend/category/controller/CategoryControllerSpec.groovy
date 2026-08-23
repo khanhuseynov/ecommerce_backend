@@ -4,12 +4,17 @@ import com.kahnhuseynov.ecommercebackend.category.dto.CategoryResponse
 import com.kahnhuseynov.ecommercebackend.category.service.CategoryService
 import com.kahnhuseynov.ecommercebackend.core.security.CustomUserDetailsService
 import com.kahnhuseynov.ecommercebackend.core.security.jwt.JwtTokenProvider
+import com.kahnhuseynov.ecommercebackend.config.SecurityConfig
 import org.spockframework.spring.SpringBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.MediaType
+import org.springframework.data.domain.PageImpl
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.context.annotation.Import
+import org.springframework.security.test.context.support.WithAnonymousUser
+import org.springframework.security.test.context.support.WithMockUser
 import spock.lang.Specification
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
@@ -20,7 +25,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(CategoryController)
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
+@Import(SecurityConfig)
+@WithMockUser(roles = "ADMIN")
 class CategoryControllerSpec extends Specification {
 
     @Autowired
@@ -37,13 +44,27 @@ class CategoryControllerSpec extends Specification {
 
     def "GET /api/v1/categories returns categories"() {
         given:
-        categoryService.getAllCategories() >> List.of(successResponse())
+        categoryService.getAllCategories(_) >> new PageImpl<>(List.of(successResponse()))
 
         expect:
         mockMvc.perform(get("/api/v1/categories"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath('$[0].id').value(1))
-                .andExpect(jsonPath('$[0].name').value("Electronics"))
+                .andExpect(jsonPath('$.content[0].id').value(1))
+                .andExpect(jsonPath('$.content[0].name').value("Electronics"))
+                .andExpect(jsonPath('$.page').value(0))
+                .andExpect(jsonPath('$.total_elements').value(1))
+                .andExpect(jsonPath('$.number_of_elements').value(1))
+                .andExpect(jsonPath('$.has_next').value(false))
+    }
+
+    @WithAnonymousUser
+    def "GET /api/v1/categories remains publicly accessible"() {
+        given:
+        categoryService.getAllCategories(_) >> new PageImpl<>(List.of(successResponse()))
+
+        expect:
+        mockMvc.perform(get("/api/v1/categories"))
+                .andExpect(status().isOk())
     }
 
     def "GET /api/v1/categories/{id} returns category"() {
@@ -67,6 +88,16 @@ class CategoryControllerSpec extends Specification {
                 .content(validRequestJson()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath('$.name').value("Electronics"))
+    }
+
+    @WithMockUser(roles = "USER")
+    def "DELETE /api/v1/categories/{id} rejects non-admin user"() {
+        when:
+        def result = mockMvc.perform(delete("/api/v1/categories/1"))
+
+        then:
+        result.andExpect(status().isForbidden())
+        0 * categoryService._
     }
 
     def "POST /api/v1/categories with blank name returns 400 Bad Request"() {
