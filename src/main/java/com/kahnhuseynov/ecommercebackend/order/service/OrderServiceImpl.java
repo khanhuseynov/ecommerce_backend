@@ -13,16 +13,30 @@ import com.kahnhuseynov.ecommercebackend.order.entity.OrderStatus;
 import com.kahnhuseynov.ecommercebackend.order.repository.OrderRepository;
 import com.kahnhuseynov.ecommercebackend.product.entity.Product;
 import com.kahnhuseynov.ecommercebackend.product.repository.ProductRepository;
+import com.kahnhuseynov.ecommercebackend.core.pagination.PaginationValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
+    private static final Map<String, String> ALLOWED_SORT_FIELDS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("status", "status"),
+            Map.entry("total_price", "totalPrice"),
+            Map.entry("totalPrice", "totalPrice"),
+            Map.entry("created_at", "createdAt"),
+            Map.entry("createdAt", "createdAt"),
+            Map.entry("updated_at", "updatedAt"),
+            Map.entry("updatedAt", "updatedAt")
+    );
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
@@ -74,11 +88,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OrderResponse> getOrders(Long userId) {
-        return orderRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    public Page<OrderResponse> getOrders(Long userId, Pageable pageable) {
+        Pageable normalizedPageable = PaginationValidator.normalizeSort(pageable, ALLOWED_SORT_FIELDS);
+        return orderRepository.findAllByUserId(userId, normalizedPageable).map(this::toResponse);
     }
 
     @Override

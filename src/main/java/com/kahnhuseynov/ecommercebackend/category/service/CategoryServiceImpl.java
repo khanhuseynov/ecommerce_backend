@@ -8,15 +8,28 @@ import com.kahnhuseynov.ecommercebackend.category.repository.CategoryRepository;
 import com.kahnhuseynov.ecommercebackend.core.exception.BusinessException;
 import com.kahnhuseynov.ecommercebackend.core.exception.ResourceNotFoundException;
 import com.kahnhuseynov.ecommercebackend.product.repository.ProductRepository;
+import com.kahnhuseynov.ecommercebackend.core.pagination.PaginationValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
+
+    private static final Map<String, String> ALLOWED_SORT_FIELDS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("name", "name"),
+            Map.entry("active", "active"),
+            Map.entry("created_at", "createdAt"),
+            Map.entry("createdAt", "createdAt"),
+            Map.entry("updated_at", "updatedAt"),
+            Map.entry("updatedAt", "updatedAt")
+    );
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
@@ -24,11 +37,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CategoryResponse> getAllCategories() {
-        return categoryRepository.findAll()
-                .stream()
-                .map(categoryMapper::toResponse)
-                .toList();
+    public Page<CategoryResponse> getAllCategories(Pageable pageable) {
+        Pageable normalizedPageable = PaginationValidator.normalizeSort(pageable, ALLOWED_SORT_FIELDS);
+        return categoryRepository.findAll(normalizedPageable).map(categoryMapper::toResponse);
     }
 
     @Override

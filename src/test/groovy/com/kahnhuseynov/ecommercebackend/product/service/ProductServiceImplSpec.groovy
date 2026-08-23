@@ -5,9 +5,12 @@ import com.kahnhuseynov.ecommercebackend.category.repository.CategoryRepository
 import com.kahnhuseynov.ecommercebackend.core.exception.ResourceNotFoundException
 import com.kahnhuseynov.ecommercebackend.product.dto.ProductRequest
 import com.kahnhuseynov.ecommercebackend.product.dto.ProductResponse
+import com.kahnhuseynov.ecommercebackend.product.dto.ProductSearchCriteria
 import com.kahnhuseynov.ecommercebackend.product.entity.Product
 import com.kahnhuseynov.ecommercebackend.product.mapper.ProductMapper
 import com.kahnhuseynov.ecommercebackend.product.repository.ProductRepository
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import spock.lang.Specification
 
 class ProductServiceImplSpec extends Specification {
@@ -22,20 +25,25 @@ class ProductServiceImplSpec extends Specification {
             categoryRepository
     )
 
-    def "getAllProducts should return mapped products"() {
+    def "searchProducts should return mapped product page"() {
         given:
         def product = savedProduct()
         def response = successResponse()
+        def criteria = new ProductSearchCriteria(
+                "lap", 1L, true, new BigDecimal("100"), new BigDecimal("2000")
+        )
+        def pageable = PageRequest.of(0, 10)
 
         when:
-        def result = productService.getAllProducts()
+        def result = productService.searchProducts(criteria, pageable)
 
         then:
-        1 * productRepository.findAll() >> List.of(product)
+        1 * productRepository.findAll(_, pageable) >> new PageImpl<>(List.of(product), pageable, 1)
         1 * productMapper.toResponse(product) >> response
         0 * _
 
-        result == List.of(response)
+        result.content == List.of(response)
+        result.totalElements == 1
     }
 
     def "getProductById should return mapped product when product exists"() {

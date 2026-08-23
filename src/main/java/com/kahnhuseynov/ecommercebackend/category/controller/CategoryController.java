@@ -3,10 +3,14 @@ package com.kahnhuseynov.ecommercebackend.category.controller;
 import com.kahnhuseynov.ecommercebackend.category.dto.CategoryRequest;
 import com.kahnhuseynov.ecommercebackend.category.dto.CategoryResponse;
 import com.kahnhuseynov.ecommercebackend.category.service.CategoryService;
+import com.kahnhuseynov.ecommercebackend.core.dto.PageResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,8 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
@@ -26,8 +28,10 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<List<CategoryResponse>> getAllCategories() {
-        return ResponseEntity.ok(categoryService.getAllCategories());
+    public ResponseEntity<PageResponse<CategoryResponse>> getAllCategories(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(PageResponse.from(categoryService.getAllCategories(pageable)));
     }
 
     @GetMapping("/{id}")

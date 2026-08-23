@@ -51,6 +51,7 @@ dependencies {
 
     // Test - Spring Boot
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
 
     // Test - Spock
     testImplementation platform('org.spockframework:spock-bom:2.4-groovy-4.0')

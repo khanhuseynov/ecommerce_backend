@@ -7,6 +7,8 @@ import com.kahnhuseynov.ecommercebackend.order.entity.OrderStatus
 import com.kahnhuseynov.ecommercebackend.order.service.OrderService
 import com.kahnhuseynov.ecommercebackend.user.entity.User
 import org.springframework.http.HttpStatus
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import spock.lang.Specification
 
 class OrderControllerSpec extends Specification {
@@ -29,10 +31,12 @@ class OrderControllerSpec extends Specification {
 
     def "getOrders delegates authenticated user"() {
         given:
-        orderService.getOrders(1L) >> [response()]
+        def pageable = PageRequest.of(0, 20)
+        orderService.getOrders(1L, pageable) >> new PageImpl<>([response()], pageable, 1)
 
         expect:
-        controller.getOrders(principal).body*.id() == [10L]
+        controller.getOrders(principal, pageable).body.content()*.id() == [10L]
+        controller.getOrders(principal, pageable).body.totalElements() == 1
     }
 
     def "getOrder scopes lookup to authenticated user"() {
