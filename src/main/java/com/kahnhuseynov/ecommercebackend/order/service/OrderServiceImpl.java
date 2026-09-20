@@ -15,6 +15,7 @@ import com.kahnhuseynov.ecommercebackend.product.entity.Product;
 import com.kahnhuseynov.ecommercebackend.product.repository.ProductRepository;
 import com.kahnhuseynov.ecommercebackend.core.pagination.PaginationValidator;
 import lombok.RequiredArgsConstructor;
+import com.kahnhuseynov.ecommercebackend.promotion.service.PromotionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -40,11 +41,12 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
+    private final PromotionService promotionService;
 
     @Override
     @Transactional
     public OrderResponse checkout(Long userId, CheckoutRequest request) {
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findWithLockByUserId(userId)
                 .orElseThrow(() -> new BusinessException("Cart is empty."));
 
         if (cart.getItems().isEmpty()) {
@@ -57,7 +59,8 @@ public class OrderServiceImpl implements OrderService {
         order.setShippingAddress(request.shippingAddress().trim());
 
         BigDecimal total = BigDecimal.ZERO;
-        for (var cartItem : cart.getItems()) {
+        for (var cartItem : cart.getItems().stream()
+                .sorted(java.util.Comparator.comparing(item -> item.getProduct().getId())).toList()) {
             Product product = productRepository.findWithLockById(cartItem.getProduct().getId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Product with id '%s' not found.".formatted(cartItem.getProduct().getId())
@@ -80,7 +83,9 @@ public class OrderServiceImpl implements OrderService {
         }
 
         order.setTotalPrice(total);
+        order.setOriginalTotalPrice(total);
         Order savedOrder = orderRepository.save(order);
+        promotionService.apply(savedOrder, request.couponCode());
         cart.getItems().clear();
 
         return toResponse(savedOrder);
@@ -133,7 +138,11 @@ public class OrderServiceImpl implements OrderService {
                 items,
                 order.getTotalPrice(),
                 order.getCreatedAt(),
-                order.getUpdatedAt()
+                order.getUpdatedAt(),
+                order.getOriginalTotalPrice(),
+                order.getDiscountAmount(),
+                order.getCouponCode(),
+                order.getPromotionName()
         );
     }
 }
