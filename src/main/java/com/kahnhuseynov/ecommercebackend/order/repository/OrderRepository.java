@@ -9,6 +9,9 @@ import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
+    boolean existsByUserIdAndStatusNotAndItems_Product_Id(Long userId,
+            com.kahnhuseynov.ecommercebackend.order.entity.OrderStatus status, Long productId);
+
     @EntityGraph(attributePaths = {"items", "items.product"})
     Page<Order> findAllByUserId(Long userId, Pageable pageable);
 
