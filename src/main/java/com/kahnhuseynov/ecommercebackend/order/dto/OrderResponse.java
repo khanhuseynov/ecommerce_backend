@@ -16,6 +16,15 @@ public record OrderResponse(
         List<OrderItemResponse> items,
         BigDecimal totalPrice,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        BigDecimal originalTotalPrice,
+        BigDecimal discountAmount,
+        String couponCode,
+        String promotionName
 ) {
+    public OrderResponse(Long id, OrderStatus status, String shippingAddress, List<OrderItemResponse> items,
+                         BigDecimal totalPrice, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(id, status, shippingAddress, items, totalPrice, createdAt, updatedAt,
+                totalPrice, BigDecimal.ZERO, null, null);
+    }
 }

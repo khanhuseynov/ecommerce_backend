@@ -57,6 +57,8 @@ public class SecurityConfig {
                                 "/api/v1/categories/**"
                         ).hasRole("ADMIN")
 
+                        .requestMatchers("/api/v1/promotions", "/api/v1/promotions/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
 

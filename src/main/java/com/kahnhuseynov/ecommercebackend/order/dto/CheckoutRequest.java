@@ -9,6 +9,8 @@ import jakarta.validation.constraints.Size;
 public record CheckoutRequest(
         @NotBlank(message = "Shipping address cannot be empty")
         @Size(max = 500, message = "Shipping address cannot exceed 500 characters")
-        String shippingAddress
+        String shippingAddress,
+        @Size(max = 50) String couponCode
 ) {
+    public CheckoutRequest(String shippingAddress) { this(shippingAddress, null); }
 }

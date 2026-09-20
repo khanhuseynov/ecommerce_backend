@@ -20,13 +20,13 @@ class OrderServiceImplSpec extends Specification {
     OrderRepository orderRepository = Mock()
     CartRepository cartRepository = Mock()
     ProductRepository productRepository = Mock()
-    OrderServiceImpl service = new OrderServiceImpl(orderRepository, cartRepository, productRepository)
+    OrderServiceImpl service = new OrderServiceImpl(orderRepository, cartRepository, productRepository, Mock(com.kahnhuseynov.ecommercebackend.promotion.service.PromotionService))
 
     def "checkout creates price snapshot decreases stock and clears cart"() {
         given:
         def product = product(2L, "Laptop", "25.50", 5, true)
         def cart = cart(product, 2)
-        cartRepository.findByUserId(1L) >> Optional.of(cart)
+        cartRepository.findWithLockByUserId(1L) >> Optional.of(cart)
         productRepository.findWithLockById(2L) >> Optional.of(product)
         orderRepository.save(_ as Order) >> { Order order ->
             order.id = 10L
@@ -52,7 +52,7 @@ class OrderServiceImplSpec extends Specification {
 
     def "checkout rejects missing or empty cart"() {
         given:
-        cartRepository.findByUserId(1L) >> cartResult
+        cartRepository.findWithLockByUserId(1L) >> cartResult
 
         when:
         service.checkout(1L, new CheckoutRequest("Baku"))
@@ -70,7 +70,7 @@ class OrderServiceImplSpec extends Specification {
         given:
         def cartProduct = product(2L, "Laptop", "25.50", 5, true)
         def lockedProduct = product(2L, "Laptop", "25.50", 1, true)
-        cartRepository.findByUserId(1L) >> Optional.of(cart(cartProduct, 2))
+        cartRepository.findWithLockByUserId(1L) >> Optional.of(cart(cartProduct, 2))
         productRepository.findWithLockById(2L) >> Optional.of(lockedProduct)
 
         when:
