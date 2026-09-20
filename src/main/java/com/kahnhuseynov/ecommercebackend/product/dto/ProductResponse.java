@@ -26,6 +26,16 @@ public record ProductResponse(
 
     LocalDateTime createdAt,
 
-    LocalDateTime updatedAt
+    LocalDateTime updatedAt,
+
+    BigDecimal averageRating,
+
+    Long reviewCount
 ) {
+    public ProductResponse(Long id, String name, String description, BigDecimal price,
+                           Integer stockQuantity, CategoryResponse category, Boolean active,
+                           LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(id, name, description, price, stockQuantity, category, active, createdAt, updatedAt,
+                BigDecimal.ZERO, 0L);
+    }
 }

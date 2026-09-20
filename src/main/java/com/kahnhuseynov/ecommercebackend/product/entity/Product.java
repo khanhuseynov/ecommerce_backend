@@ -53,6 +53,12 @@ public class Product {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @org.hibernate.annotations.Formula("(select coalesce(round(avg(r.rating), 2), 0) from reviews r where r.product_id = id)")
+    private BigDecimal averageRating = BigDecimal.ZERO;
+
+    @org.hibernate.annotations.Formula("(select count(*) from reviews r where r.product_id = id)")
+    private Long reviewCount = 0L;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

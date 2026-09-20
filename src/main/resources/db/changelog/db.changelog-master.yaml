@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/v5-order.yaml
   - include:
       file: db/changelog/v6-promotion.sql
+  - include:
+      file: db/changelog/v7-review.sql
