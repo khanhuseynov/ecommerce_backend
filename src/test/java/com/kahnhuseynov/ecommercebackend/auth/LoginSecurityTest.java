@@ -20,6 +20,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Optional;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import java.util.Date;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = AuthController.class, properties = {
@@ -76,4 +81,48 @@ class LoginSecurityTest {
                         .content("{\"email\":\"login@test.example\",\"password\":\"LocalTestPassword!\"}"))
                 .andExpect(status().isUnauthorized());
     }
+    @Test
+    void missingTokenReturnsUnauthorized() throws Exception {
+        mvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/promotions")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void invalidTokensReturnUnauthorized() throws Exception {
+        for (String token : new String[]{"", "invalid-token", signedToken(-60_000, false),
+                signedToken(60_000, true)}) {
+            mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + token))
+                    .andExpect(status().isUnauthorized());
+        }
+    }
+
+    @Test
+    void validTokenAuthenticatesButDoesNotGrantAdminAccess() throws Exception {
+        String token = signedToken(60_000, false);
+        mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(account.getEmail()));
+        mvc.perform(get("/api/v1/promotions").header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void tokenForDisabledOrDeletedUserReturnsUnauthorized() throws Exception {
+        String token = signedToken(60_000, false);
+        account.setEnabled(false);
+        mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
+        when(users.findByEmail(account.getEmail())).thenReturn(Optional.empty());
+        mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
+    }
+
+    private String signedToken(long expiresInMs, boolean wrongKey) {
+        var key = wrongKey ? Jwts.SIG.HS256.key().build() : Keys.hmacShaKeyFor(Decoders.BASE64.decode(
+                "cHJvbW90aW9uLXRlc3Qtc2VjcmV0LWtleS0zMi1ieXRlcy1sb25n"));
+        return Jwts.builder().subject(account.getEmail())
+                .expiration(new Date(System.currentTimeMillis() + expiresInMs))
+                .signWith(key).compact();
+    }
+
 }

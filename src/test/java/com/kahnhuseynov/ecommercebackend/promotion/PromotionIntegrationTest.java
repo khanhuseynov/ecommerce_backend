@@ -166,7 +166,7 @@ class PromotionIntegrationTest {
 
     @Test
     void promotionEndpointsRequireAdminAndValidateRequests() throws Exception {
-        mvc.perform(get("/api/v1/promotions")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/promotions")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/promotions").with(user("buyer").roles("USER")))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/promotions").with(user("buyer").roles("USER"))

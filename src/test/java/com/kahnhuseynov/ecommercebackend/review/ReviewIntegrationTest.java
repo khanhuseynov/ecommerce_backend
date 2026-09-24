@@ -142,7 +142,7 @@ class ReviewIntegrationTest {
     void validationAndAuthenticationCannotBeBypassed() throws Exception {
         Fixture f = fixture(OrderStatus.PLACED);
         mvc.perform(post(path(f)).contentType(MediaType.APPLICATION_JSON).content("{\"rating\":5}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
         for (String body : List.of("{}", "{\"rating\":0}", "{\"rating\":6}",
                 mapper.writeValueAsString(new ReviewRequest(5, "x".repeat(2001))))) {
             mvc.perform(post(path(f)).with(user(f.principal())).contentType(MediaType.APPLICATION_JSON).content(body))
