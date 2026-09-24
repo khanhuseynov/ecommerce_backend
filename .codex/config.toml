@@ -1,6 +1,0 @@
-  [mcp_servers.idea]
-    command = "/snap/intellij-idea-ultimate/800/bin/idea"
-    args = ["stdioMcpServer"]
-
-    [mcp_servers.idea.env]
-      IJ_MCP_SERVER_PORT = "64342"
